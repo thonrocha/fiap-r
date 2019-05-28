@@ -1,0 +1,37 @@
+---
+title: "Conceitos estatisticos para IA"
+---
+
+# Análise exploratória de dados
+
+### Análise inicial dos dados
+
+Listando diretorio atual, Carregando a base, setando o separador default do csv como ";" 
+
+```{r}
+vinhos <- read.csv("BaseWine_Red_e_White.csv", sep = ";")
+View(vinhos)
+```
+
+Verificando os nomes
+
+```{r}
+names(vinhos)
+```
+Verificando o formato das variáveis
+```{r}
+str(vinhos)
+```
+
+Mostrando estatisticas básicas, para começar a entender o padrão dos dados e identificar se existem dados muito discrepantes ou possiveis erros iniciais.
+```{r}
+summary(vinhos)
+```
+
+Gerando histogramas para auxiliar o entendimento do aspecto comportamental dos dados
+```{r}
+par (mfrow=c(1,1))
+hist(vinhos$quality)
+
+```
+
