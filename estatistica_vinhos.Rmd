@@ -23,10 +23,9 @@ library(corrplot)
 
 ```{r load data}
 vinhos <- read.csv("Base_alpha.csv", sep = ";", row.names = 1)
-View(vinhos)
 ```
 
-Verificando os nomes
+Verificando os nomes das colunas
 
 ```{r}
 names(vinhos)
@@ -42,21 +41,35 @@ summary(vinhos)
 ```
 
 # Limpeza dos dados e Feature Selection
-Dataser com 14 variaveis, sendo que existe uma variável resposta "Quality", indicando a qualidade medida de cada vinho
+Dataset com 14 variaveis, sendo que existe uma variável resposta "Quality", indicando a qualidade medida de cada vinho
 
 # Explicando as variaveis
 bla bla bla
 
 # Correlação de variaveis
 ```{r,message=FALSE,warning=FALSE}
-plot(vinhos)
+corrplot(cor(vinhos))
 ```
 
 
 Gerando histogramas para auxiliar o entendimento do aspecto comportamental dos dados
 ```{r}
-par (mfrow=c(1,1))
-hist(vinhos$quality)
+par (mfrow=c(2,2))
+hist(vinhos$fixedacidity) 
+hist(vinhos$volatileacidity) 
+hist(vinhos$citricacid) 
+hist(vinhos$residualsugar) 
+hist(vinhos$chlorides) 
+hist(vinhos$freesulfurdioxide) 
+hist(vinhos$totalsulfurdioxide) 
+hist(vinhos$density) 
+hist(vinhos$pH) 
+hist(vinhos$sulphates) 
+hist(vinhos$alcohol) 
+hist(vinhos$quality) 
+hist(vinhos$is_red) 
+
+
 
 ```
 
