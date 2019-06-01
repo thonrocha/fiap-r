@@ -2,74 +2,132 @@
 title: "Conceitos estatisticos para IA"
 output:
   html_document:
-    fig_height: 8
-    fig_width: 12
-    highlight: tang
-    toc: yes
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: cosmo
+    highlight: tango
+    code_folding: hide
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE , warning = FALSE , message = FALSE)
-```
 
-# Introdução
-bla bla
 
-```{r load libraries}
+```{r load libraries, message=FALSE, warning=FALSE}
 library(corrplot)
+library(corrgram)
+library(skimr)
 
 ```
+******
+# Introdução
+******
 
+Esta análise aplica-se a um dataset de variantes do vinho portugues "Vinho Verde", possuindo diversos indicadores de suas caracteristicas, como acidez, teor alcoolico, quantidade de açucar, entre outros... 
 
+******
+# Limpeza dos dados e formatação dos dados originais
+******
+
+ - Para facilitar a manipulação foi criada uma variavel chamada is_red, um booleano (0 / 1) que indica se o vinho é vermelho(1) ou branco(0)
+ 
+ - Os dados iniciais eram carregados como "Factor", sendo necessários converte-los para numericos, optamos por fazer isso na base antes de carrega-la para análise
+ 
 ```{r load data}
 vinhos <- read.csv("Base_alpha.csv", sep = ";", row.names = 1)
 ```
+******
+# Explicando as variaveis
+******
 
-Verificando os nomes das colunas
+Dataset com 13 variaveis, sendo que existe uma variável resposta "Quality", indicando a qualidade medida de cada vinho.
 
 ```{r}
 names(vinhos)
 ```
-Verificando o formato das variáveis
-```{r}
+
+ - **fixedacidity:** Indica a quantidade de acidos presente no vinho (voláteis ou não voláteis)
+ - **volatileacidity:** Indica a quantidade de ácido acético no vinho, que em níveis muito altos pode levar a um gosto desagradável de vinagre
+ - **citricacid:** Indica a quantidade de ácido cítrico,  pode adicionar “frescura” e sabor aos vinhos.
+ - **residualsugar:** Indica a quantidade de açúcar restante depois que o processo de fermentação.
+ - **chlorides:** Indica a quantidade de sal no vinho.
+ - **freesulfurdioxide:** Indica a quantidade da forma livre de SO2, impede o crescimento microbiano e a oxidação do vinho, Garante condições melhores para os processos de vinificação da bebida, elimina bactérias e leveduras frágeis e indesejáveis, o que permite que apenas as melhores prossigam com o processo fermentativo. Além do mais, melhora o aroma e afina a cor da bebida
+ - **totalsulfurdioxide:** Indica a quantidade de formas livres e encadernadas de S02; em baixas concentrações, o SO2 é quase indetectável no vinho, mas nas concentrações de SO2 livre acima de 50 ppm, o SO2 se torna evidente no nariz e no sabor do vinho.
+ - **density:**indica a densidade do vinho, a densidade é próxima à da água, dependendo do percentual de álcool e teor de açúcar.
+ - **pH:** descreve como o vinho é acídico ou básico numa escala de 0 (muito ácido) a 14 (muito básico); a maioria dos vinhos tem entre 3-4 na escala de pH.
+ - **sulphates:** Indica a quantidade de sulfatos, um aditivo de vinho que pode contribuir para os níveis de gás de dióxido de enxofre (S02), que age como um antimicrobiano e antioxidante.
+ - **alcohol:** Indica o teor alcoólico percentual do vinho.
+ - **quality:** variável de saída (com base em dados sensoriais) que poderiam ser de 0 a 10 sendo zero muito ruim e 10 muito excelente.
+ - **is_red:** variável booleana que indica se o vinho é vermelho ou branco
+ ```{r}
 str(vinhos)
 ```
+******
+# Estatisticas Básicas
+******
 
 Mostrando estatisticas básicas, para começar a entender o padrão dos dados e identificar se existem dados muito discrepantes ou possiveis erros iniciais.
+
 ```{r}
 summary(vinhos)
 ```
 
-# Limpeza dos dados e Feature Selection
-Dataset com 14 variaveis, sendo que existe uma variável resposta "Quality", indicando a qualidade medida de cada vinho
+Neste item verificamos a existencia de dados incompletos (missing), quantidade de observações e um pequeno histograma para auxiliar a visualização dos dados
+```{r}
+kable(skim(vinhos))
+```
 
-# Explicando as variaveis
-bla bla bla
+******
+# Histogramas das variaveis
+******
 
+Gerando histogramas para auxiliar o entendimento do aspecto comportamental de cada variavel
+```{r}
+par(mfrow=c(2,2))
+hist(vinhos$fixedacidity, xlab='Acidez Fixa', main = 'Histograma de Acidez Fixa') 
+hist(vinhos$volatileacidity, xlab='Acidez volátil', main = 'Histograma de Acidez volátil') 
+hist(vinhos$citricacid, xlab='Ácido cítrico', main = 'Histograma de Ácido cítrico') 
+hist(vinhos$residualsugar, xlab='Açúcar residual', main = 'Histogram de Açúcar residual')
+hist(vinhos$chlorides, xlab='Cloretos', main = 'Histogram de Cloretos')
+hist(vinhos$freesulfurdioxide, xlab='Dióxido de enxofre livre', main = 'Histogram de Dióxido de enxofre livre')
+hist(vinhos$totalsulfurdioxide, xlab='Dióxido de enxofre total', main = 'Histogram de Dióxido de enxofre total')
+hist(vinhos$density, xlab='Densidade', main = 'Histogram de Densidade')
+hist(vinhos$pH, xlab='pH', main = 'Histograma de pH')
+hist(vinhos$sulphates, xlab='Sulfatos', main = 'Histogram de Sulfatos')
+hist(vinhos$alcohol, xlab='Álcool', main = 'Histogram de Álcool')
+hist(vinhos$quality, xlab='Qualidade', main = 'Histogram de Qualidade')
+
+```
+
+******
+# Outliers
+******
+
+Utilizamos os graficos em bloxplot para nos auxiliar a verificar a existencia de Outliers além de gerar uma forma diferente de visualização para analisar o aspecto comportamental de cada variável
+```{r}
+par (mfrow=c(2,2))
+boxplot(vinhos$fixedacidity, xlab='Acidez Fixa', main = 'Histograma de Acidez Fixa') 
+boxplot(vinhos$volatileacidity, xlab='Acidez volátil', main = 'Histograma de Acidez volátil') 
+boxplot(vinhos$citricacid, xlab='Ácido cítrico', main = 'Histograma de Ácido cítrico') 
+boxplot(vinhos$residualsugar, xlab='Açúcar residual', main = 'Histogram de Açúcar residual')
+boxplot(vinhos$chlorides, xlab='Cloretos', main = 'Histogram de Cloretos')
+boxplot(vinhos$freesulfurdioxide, xlab='Dióxido de enxofre livre', main = 'Histogram de Dióxido de enxofre livre')
+boxplot(vinhos$totalsulfurdioxide, xlab='Dióxido de enxofre total', main = 'Histogram de Dióxido de enxofre total')
+boxplot(vinhos$density, xlab='Densidade', main = 'Histogram de Densidade')
+boxplot(vinhos$pH, xlab='pH', main = 'Histograma de pH')
+boxplot(vinhos$sulphates, xlab='Sulfatos', main = 'Histogram de Sulfatos')
+boxplot(vinhos$alcohol, xlab='Álcool', main = 'Histogram de Álcool')
+boxplot(vinhos$quality, xlab='Qualidade', main = 'Histogram de Qualidade')
+```
+
+******
 # Correlação de variaveis
+******
+
+Gerando correlação das variaveis para ajudar a entender quais variaveis são relacionadas e quais variaveis podem nos ajudar a decidir a qualidade do vinho
 ```{r,message=FALSE,warning=FALSE}
 corrplot(cor(vinhos))
 ```
 
-
-Gerando histogramas para auxiliar o entendimento do aspecto comportamental dos dados
-```{r}
-par (mfrow=c(2,2))
-hist(vinhos$fixedacidity) 
-hist(vinhos$volatileacidity) 
-hist(vinhos$citricacid) 
-hist(vinhos$residualsugar) 
-hist(vinhos$chlorides) 
-hist(vinhos$freesulfurdioxide) 
-hist(vinhos$totalsulfurdioxide) 
-hist(vinhos$density) 
-hist(vinhos$pH) 
-hist(vinhos$sulphates) 
-hist(vinhos$alcohol) 
-hist(vinhos$quality) 
-hist(vinhos$is_red) 
-
-
-
-```
 
