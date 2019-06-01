@@ -1,15 +1,28 @@
 ---
 title: "Conceitos estatisticos para IA"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 12
+    highlight: tang
+    toc: yes
 ---
 
-# Análise exploratória de dados
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE , warning = FALSE , message = FALSE)
+```
 
-### Análise inicial dos dados
+# Introdução
+bla bla
 
-Listando diretorio atual, Carregando a base, setando o separador default do csv como ";" 
+```{r load libraries}
+library(corrplot)
 
-```{r}
-vinhos <- read.csv("BaseWine_Red_e_White.csv", sep = ";")
+```
+
+
+```{r load data}
+vinhos <- read.csv("Base_alpha.csv", sep = ";", row.names = 1)
 View(vinhos)
 ```
 
@@ -27,6 +40,18 @@ Mostrando estatisticas básicas, para começar a entender o padrão dos dados e 
 ```{r}
 summary(vinhos)
 ```
+
+# Limpeza dos dados e Feature Selection
+Dataser com 14 variaveis, sendo que existe uma variável resposta "Quality", indicando a qualidade medida de cada vinho
+
+# Explicando as variaveis
+bla bla bla
+
+# Correlação de variaveis
+```{r,message=FALSE,warning=FALSE}
+plot(vinhos)
+```
+
 
 Gerando histogramas para auxiliar o entendimento do aspecto comportamental dos dados
 ```{r}
