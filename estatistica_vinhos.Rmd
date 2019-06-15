@@ -130,4 +130,58 @@ Gerando correlação das variaveis para ajudar a entender quais variaveis são r
 corrplot(cor(vinhos))
 ```
 
+******
+# Gráficos de dispersão
+******
 
+Gerando gráficos de dispersão com todas as variáveis que apresentaram algum tipo de relação com a variável que decidiu a qualidade(quality) dos vinhos
+
+
+```{r}
+par (mfrow=c(2,2))
+plot (x = vinhos$alcohol, y = vinhos$quality,
+      main = "Relação com Teor alcoólico",
+      xlab = "Álcool",
+      ylab = "Qualidade")
+
+plot (x = vinhos$citricacid, y = vinhos$quality,
+      main = "Relação com Ácido cítrico",
+      xlab = "Ácido cítrico",
+      ylab = "Qualidade")
+
+plot (x = vinhos$freesulfurdioxide, y = vinhos$quality,
+      main = "Relação com Dióxido de enxofre livre",
+      xlab = "Dióxido de enxofre livre",
+      ylab = "Qualidade")
+
+plot (x = vinhos$density, y = vinhos$quality,
+      main = "Relação com Densidade",
+      xlab = "Densidade",
+      ylab = "Qualidade")
+
+```
+
+```` {r}
+par (mfrow=c(2,2))
+plot (x = vinhos$volatileacidity, y = vinhos$quality,
+      main = "Relação com Acidez volátil",
+      xlab = "Acidez volátil",
+      ylab = "Qualidade")
+
+plot (x = vinhos$totalsulfurdioxide, y = vinhos$quality,
+      main = "Relação com Dióxido de enxofre total",
+      xlab = "Dióxido de enxofre total",
+      ylab = "Qualidade")
+
+plot (x = vinhos$chlorides, y = vinhos$quality,
+      main = "Relação com Cloretos",
+      xlab = "Cloretos",
+      ylab = "Qualidade")
+
+plot (x = vinhos$pH, y = vinhos$quality,
+      main = "Relação com pH",
+      xlab = "pH",
+      ylab = "Qualidade")
+
+
+````
