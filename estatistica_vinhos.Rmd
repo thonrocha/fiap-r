@@ -7,7 +7,7 @@ output:
     toc: true
     fig_width: 7
     fig_height: 4.5
-    theme: cosmo
+    theme: cerulean 
     highlight: tango
     code_folding: hide
 ---
@@ -18,7 +18,9 @@ output:
 library(corrplot)
 library(corrgram)
 library(skimr)
-
+library(knitr)
+library(ggplot2)
+library(dplyr)
 ```
 ******
 # Introdução
@@ -27,15 +29,17 @@ library(skimr)
 Esta análise aplica-se a um dataset de variantes do vinho portugues "Vinho Verde", possuindo diversos indicadores de suas caracteristicas, como acidez, teor alcoolico, quantidade de açucar, entre outros... 
 
 ******
-# Limpeza dos dados e formatação dos dados originais
+# Carregando dados
 ******
 
- - Para facilitar a manipulação foi criada uma variavel chamada is_red, um booleano (0 / 1) que indica se o vinho é vermelho(1) ou branco(0)
- 
- - Os dados iniciais eram carregados como "Factor", sendo necessários converte-los para numericos, optamos por fazer isso na base antes de carrega-la para análise
- 
 ```{r load data}
-vinhos <- read.csv("Base_alpha.csv", sep = ";", row.names = 1)
+vinhos <- read.csv2("BaseWine_Red_e_White.csv", sep = ";", row.names = 1)
+```
+
+Para o momento não precisamos da variavel Vinho (Red / White), então selecionamos as demais
+```{r}
+vinhosret = select(vinhos, 1:12)
+
 ```
 ******
 # Explicando as variaveis
@@ -44,7 +48,7 @@ vinhos <- read.csv("Base_alpha.csv", sep = ";", row.names = 1)
 Dataset com 13 variaveis, sendo que existe uma variável resposta "Quality", indicando a qualidade medida de cada vinho.
 
 ```{r}
-names(vinhos)
+names(vinhosret)
 ```
 
  - **fixedacidity:** Indica a quantidade de acidos presente no vinho (voláteis ou não voláteis)
@@ -60,66 +64,53 @@ names(vinhos)
  - **alcohol:** Indica o teor alcoólico percentual do vinho.
  - **quality:** variável de saída (com base em dados sensoriais) que poderiam ser de 0 a 10 sendo zero muito ruim e 10 muito excelente.
  - **is_red:** variável booleana que indica se o vinho é vermelho ou branco
- ```{r}
-str(vinhos)
-```
+ 
+
 ******
 # Estatisticas Básicas
 ******
 
 Mostrando estatisticas básicas, para começar a entender o padrão dos dados e identificar se existem dados muito discrepantes ou possiveis erros iniciais.
 
-```{r}
+
+```{r results='asis'}
 summary(vinhos)
 ```
 
+
 Neste item verificamos a existencia de dados incompletos (missing), quantidade de observações e um pequeno histograma para auxiliar a visualização dos dados
-```{r}
-kable(skim(vinhos))
-```
-
-******
-# Histogramas das variaveis
-******
-
-Gerando histogramas para auxiliar o entendimento do aspecto comportamental de cada variavel
-```{r}
-par(mfrow=c(2,2))
-hist(vinhos$fixedacidity, xlab='Acidez Fixa', main = 'Histograma de Acidez Fixa') 
-hist(vinhos$volatileacidity, xlab='Acidez volátil', main = 'Histograma de Acidez volátil') 
-hist(vinhos$citricacid, xlab='Ácido cítrico', main = 'Histograma de Ácido cítrico') 
-hist(vinhos$residualsugar, xlab='Açúcar residual', main = 'Histogram de Açúcar residual')
-hist(vinhos$chlorides, xlab='Cloretos', main = 'Histogram de Cloretos')
-hist(vinhos$freesulfurdioxide, xlab='Dióxido de enxofre livre', main = 'Histogram de Dióxido de enxofre livre')
-hist(vinhos$totalsulfurdioxide, xlab='Dióxido de enxofre total', main = 'Histogram de Dióxido de enxofre total')
-hist(vinhos$density, xlab='Densidade', main = 'Histogram de Densidade')
-hist(vinhos$pH, xlab='pH', main = 'Histograma de pH')
-hist(vinhos$sulphates, xlab='Sulfatos', main = 'Histogram de Sulfatos')
-hist(vinhos$alcohol, xlab='Álcool', main = 'Histogram de Álcool')
-hist(vinhos$quality, xlab='Qualidade', main = 'Histogram de Qualidade')
-
+```{r results='asis'}
+skim(vinhos)
 ```
 
 ******
 # Outliers
 ******
 
-Utilizamos os graficos em bloxplot para nos auxiliar a verificar a existencia de Outliers além de gerar uma forma diferente de visualização para analisar o aspecto comportamental de cada variável
-```{r}
-par (mfrow=c(2,2))
-boxplot(vinhos$fixedacidity, xlab='Acidez Fixa', main = 'Histograma de Acidez Fixa') 
-boxplot(vinhos$volatileacidity, xlab='Acidez volátil', main = 'Histograma de Acidez volátil') 
-boxplot(vinhos$citricacid, xlab='Ácido cítrico', main = 'Histograma de Ácido cítrico') 
-boxplot(vinhos$residualsugar, xlab='Açúcar residual', main = 'Histogram de Açúcar residual')
-boxplot(vinhos$chlorides, xlab='Cloretos', main = 'Histogram de Cloretos')
-boxplot(vinhos$freesulfurdioxide, xlab='Dióxido de enxofre livre', main = 'Histogram de Dióxido de enxofre livre')
-boxplot(vinhos$totalsulfurdioxide, xlab='Dióxido de enxofre total', main = 'Histogram de Dióxido de enxofre total')
-boxplot(vinhos$density, xlab='Densidade', main = 'Histogram de Densidade')
-boxplot(vinhos$pH, xlab='pH', main = 'Histograma de pH')
-boxplot(vinhos$sulphates, xlab='Sulfatos', main = 'Histogram de Sulfatos')
-boxplot(vinhos$alcohol, xlab='Álcool', main = 'Histogram de Álcool')
-boxplot(vinhos$quality, xlab='Qualidade', main = 'Histogram de Qualidade')
+Em algumas variáveis, podemos identificar valores que se parece com outliers, posteriormente detalharemos cada variavel interessante.
+
+```{r }
+boxplot(vinhos)
 ```
+
+******
+# Análise exploratória de dados
+******
+
+Primeiramente vamos analisar a variável quality separadamente
+```{r }
+
+vinhos %>% group_by(quality) %>% summarise(count = n()) %>% 
+  ggplot(aes(x = reorder(quality, count), y = count, fill = as.factor(quality), label = count)) +
+  geom_bar(stat = "identity") + 
+  geom_text(hjust = -.1) +
+  theme_light() +
+  scale_fill_brewer(palette = "Blues", direction = -1) +
+  coord_flip(ylim = c(0, 3000)) +
+  labs(x = "Quality", y = "Count", fill = "Quality")
+```
+
+
 
 ******
 # Correlação de variaveis
@@ -127,58 +118,68 @@ boxplot(vinhos$quality, xlab='Qualidade', main = 'Histogram de Qualidade')
 
 Gerando correlação das variaveis para ajudar a entender quais variaveis são relacionadas e quais variaveis podem nos ajudar a decidir a qualidade do vinho
 ```{r,message=FALSE,warning=FALSE}
-corrplot(cor(vinhos))
+corrplot(cor(vinhosret))
 ```
+
+***
+# Correlação + Cluster
+***
+
+Incluindo cluster sobre os relacionamentos identificados
+
+```{r,message=FALSE,warning=FALSE}
+corrplot(cor(vinhosret), order = "hclust", addrect = 2)
+```
+
+Pela análise temos algumas variáveis que parecem ter relação com a variavel quality: alcohol, 
+
+
 
 ******
 # Gráficos de dispersão
 ******
 
-Gerando gráficos de dispersão com todas as variáveis que apresentaram algum tipo de relação com a variável que decidiu a qualidade(quality) dos vinhos
+Gerando gráficos de dispersão com todas as variáveis que apresentaram algum tipo de relação com a variável que decide a qualidade(quality) dos vinhos
 
 
 ```{r}
 par (mfrow=c(2,2))
-plot (x = vinhos$alcohol, y = vinhos$quality,
+plot (x = vinhosret$alcohol, y = vinhosret$quality,
       main = "Relação com Teor alcoólico",
       xlab = "Álcool",
       ylab = "Qualidade")
 
-plot (x = vinhos$citricacid, y = vinhos$quality,
+plot (x = vinhosret$citricacid, y = vinhosret$quality,
       main = "Relação com Ácido cítrico",
       xlab = "Ácido cítrico",
       ylab = "Qualidade")
 
-plot (x = vinhos$freesulfurdioxide, y = vinhos$quality,
+plot (x = vinhosret$freesulfurdioxide, y = vinhosret$quality,
       main = "Relação com Dióxido de enxofre livre",
       xlab = "Dióxido de enxofre livre",
       ylab = "Qualidade")
 
-plot (x = vinhos$density, y = vinhos$quality,
+plot (x = vinhosret$density, y = vinhosret$quality,
       main = "Relação com Densidade",
       xlab = "Densidade",
       ylab = "Qualidade")
 
-```
-
-```` {r}
-par (mfrow=c(2,2))
-plot (x = vinhos$volatileacidity, y = vinhos$quality,
+plot (x = vinhosret$volatileacidity, y = vinhosret$quality,
       main = "Relação com Acidez volátil",
       xlab = "Acidez volátil",
       ylab = "Qualidade")
 
-plot (x = vinhos$totalsulfurdioxide, y = vinhos$quality,
+plot (x = vinhosret$totalsulfurdioxide, y = vinhosret$quality,
       main = "Relação com Dióxido de enxofre total",
       xlab = "Dióxido de enxofre total",
       ylab = "Qualidade")
 
-plot (x = vinhos$chlorides, y = vinhos$quality,
+plot (x = vinhosret$chlorides, y = vinhosret$quality,
       main = "Relação com Cloretos",
       xlab = "Cloretos",
       ylab = "Qualidade")
 
-plot (x = vinhos$pH, y = vinhos$quality,
+plot (x = vinhosret$pH, y = vinhosret$quality,
       main = "Relação com pH",
       xlab = "pH",
       ylab = "Qualidade")
