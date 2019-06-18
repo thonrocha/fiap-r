@@ -21,6 +21,10 @@ library(skimr)
 library(knitr)
 library(ggplot2)
 library(dplyr)
+library(formattable)
+library(randomForest)
+library(caret)
+
 ```
 ******
 # Introdução
@@ -39,17 +43,13 @@ vinhos <- read.csv2("BaseWine_Red_e_White.csv", sep = ";", row.names = 1)
 Para o momento não precisamos da variavel Vinho (Red / White), então selecionamos as demais
 ```{r}
 vinhosret = select(vinhos, 1:12)
-
+vinhos_padronizado = scale(vinhosret)
 ```
 ******
 # Explicando as variaveis
 ******
 
 Dataset com 13 variaveis, sendo que existe uma variável resposta "Quality", indicando a qualidade medida de cada vinho.
-
-```{r}
-names(vinhosret)
-```
 
  - **fixedacidity:** Indica a quantidade de acidos presente no vinho (voláteis ou não voláteis)
  - **volatileacidity:** Indica a quantidade de ácido acético no vinho, que em níveis muito altos pode levar a um gosto desagradável de vinagre
@@ -72,15 +72,26 @@ names(vinhosret)
 
 Mostrando estatisticas básicas, para começar a entender o padrão dos dados e identificar se existem dados muito discrepantes ou possiveis erros iniciais.
 
-
-```{r results='asis'}
+## Sumario da Base original
+```{r}
 summary(vinhos)
+```
+## Sumario da base Padronizada
+```{r}
+summary(vinhos_padronizado)
 ```
 
 
 Neste item verificamos a existencia de dados incompletos (missing), quantidade de observações e um pequeno histograma para auxiliar a visualização dos dados
+
+## Dado Original
 ```{r results='asis'}
-skim(vinhos)
+skim(vinhos) %>% skimr::kable()
+```
+
+## Dado padronizado
+```{r results='asis'}
+skim(as.data.frame(vinhos_padronizado)) %>% skimr::kable()
 ```
 
 ******
@@ -89,8 +100,22 @@ skim(vinhos)
 
 Em algumas variáveis, podemos identificar valores que se parece com outliers, posteriormente detalharemos cada variavel interessante.
 
-```{r }
-boxplot(vinhos)
+```{r}
+boxplot(vinhos_padronizado)
+```
+
+# removendo Outliers
+```{r}
+vinhos_padronizado <- as.data.frame(vinhos_padronizado)
+vinhos_padronizado <- subset(
+  vinhos_padronizado, 
+  vinhos$freesulfurdioxide<4 & vinhos_padronizado$chlorides<4 & vinhos_padronizado$totalsulfurdioxide<4 & vinhos_padronizado$volatileacidity<4
+)
+```
+
+# Apos remoção
+```{r}
+boxplot(vinhos_padronizado)
 ```
 
 ******
@@ -184,5 +209,46 @@ plot (x = vinhosret$pH, y = vinhosret$quality,
       xlab = "pH",
       ylab = "Qualidade")
 
+```
 
-````
+# Criando massa de teste e treino
+Para esse passo, separamos 70% da base como modelo de aprendizagem para treinar os algoritmos e 30% da base como modelo de testes, para validarmos se os algoritmos possuem assertividade
+
+```{r}
+set.seed(1337)
+indice_vinho <- createDataPartition(vinhosret$quality, p=0.7, list=F)
+treino <- as.data.frame(vinhosret[indice_vinho, ])
+teste <- as.data.frame(vinhosret[-indice_vinho, ])
+
+```
+
+# Regressão linear
+Primeiramente vamos executar um algoritmo de regressão linear, com o intuito de iniciar o processo de estimar a variavel quality
+
+```{r}
+model <- lm(treino$quality ~ treino$freesulfurdioxide+treino$totalsulfurdioxide+treino$density+treino$chlorides+treino$alcohol+treino$sulphates+treino$volatileacidity+treino$density)
+summary(model)
+val_pred <- predict(model, newdata=teste, interval = 'prediction', level = 0.80)
+summary(val_pred)
+
+```
+
+```{r}
+ggplot(data=model, aes(model$residuals)) +
+geom_histogram(binwidth = 1, color = "black", fill = "red4") +
+theme(panel.background = element_rect(fill = "white"),
+axis.line.x=element_line(),
+axis.line.y=element_line()) +
+ggtitle("Histograma dos Residuos")
+```
+
+```{r}
+ggplot(data = vinhos, aes(x = vinhos$quality, y = vinhos$freesulfurdioxide+vinhos$totalsulfurdioxide+vinhos$density+vinhos$chlorides+vinhos$alcohol+vinhos$sulphates+vinhos$volatileacidity+vinhos$density)) +
+geom_point() +
+stat_smooth(method = "lm", col = "dodgerblue3") +
+theme(panel.background = element_rect(fill = "white"),
+axis.line.x=element_line(),
+axis.line.y=element_line()) +
+ggtitle("Modelo linear dos dados")
+```
+
